@@ -1,0 +1,42 @@
+生成基础镜像
+
+#Dockerfile by Tyson<www.svipc.com>
+
+FROM centos
+
+RUN rm -f /etc/localtime \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+RUN echo '' >> /etc/bashrc \
+    && echo 'export LANGUAGE="zh_CN.UTF-8"' >> /etc/bashrc \
+    && echo 'export LANG="zh_CN.UTF-8"' >> /etc/bashrc
+RUN localedef -c -i zh_CN -f UTF-8 zh_CN.UTF-8
+
+中国大陆用户，请使用daocloud.io的镜像加速
+
+CoreOS:
+
+echo 'DOCKER_OPTS="–registry-mirror=http://77a87f01.m.daocloud.io"' >> /run/flannel_docker_opts.env 
+systemctl daemon-reload
+systemctl restart docker
+CentOS:
+
+sudo sed -i 's|OPTIONS=|OPTIONS=–registry-mirror=http://77a87f01.m.daocloud.io |g' /etc/sysconfig/docker
+sudo service docker restart
+Ubuntu:
+
+echo "DOCKER_OPTS=\"\$DOCKER_OPTS –registry-mirror=http://77a87f01.m.daocloud.io\"" | sudo tee -a /etc/default/docker
+sudo service docker restart
+
+使用yum安装软件后的docker image 瘦身
+
+rm -rf /usr/{{lib,share}/locale,{lib,lib64}/gconv,bin/localedef,sbin/build-locale-archive}
+rm -rf /usr/share/{man,doc,info,gnome/help}
+rm -rf /usr/share/cracklib
+rm -rf /usr/share/i18n
+rm -rf /sbin/sln
+rm -rf /etc/ld.so.cache
+rm -rf /var/cache/ldconfig/*
+yum reinstall -y glibc-common
+yum clean all
+ls -1 /usr/share/locale/ | awk '$1!="locale.alias"&&$1!="zh_CN"{system("rm -rf /usr/share/locale/"$1)}'
+\cp -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime

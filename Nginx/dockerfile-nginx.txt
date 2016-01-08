@@ -1,0 +1,18 @@
+FROM centos
+MAINTAINER "www.svipc.com"
+ENV REFRESHED_AT 2015-09-18
+
+RUN yum -y install wget telnet vim htop && \
+	mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup && \
+	wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && \
+	wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && \
+	rpm -ivh http://nginx.org/packages/centos/7/noarch/RPMS/nginx-release-centos-7-0.el7.ngx.noarch.rpm && \
+	yum upgrade -y && \
+	yum clean all
+	
+RUN yum install nginx 
+
+EXPOSE 80 443
+
+CMD ["nginx", "-g", "daemon off;"]
+	

@@ -1,0 +1,41 @@
+FROM centos
+MAINTAINER Tyson
+ENV REFRESHED_AT 2015-10-10
+
+RUN yum -y install wget && \
+	mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup && \
+	wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && \
+	wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && \
+	yum install -y vim net-tools telnet screen htop && \
+	yum upgrade -y && \
+	yum clean all
+	
+ADD MariaDB.repo /etc/yum.repos.d//MariaDB.repo
+
+RUN yum -y install initscripts && \
+	yum install -y MariaDB-server MariaDB-client
+
+RUN /usr/bin/mysql_install_db --datadir="/var/lib/mysql" --user=mysql
+
+RUN	/usr/bin/mysqld_safe --datadir="/var/lib/mysql" --socket="/var/lib/mysql/mysql.sock" --user=mysql  >/dev/null 2>&1 &
+	
+RUN	/usr/bin/mysqladmin -u root password 123.com
+
+
+RUN mysql -uroot -p1111 mysql <<< "要执行的语句"
+
+
+
+RUN mysql -u root -p
+
+RUN mysql 123.com
+
+RUN GRANT ALL PRIVILEGES ON *.* TO 'root'@'%'IDENTIFIED BY '123.com' WITH GRANT OPTION;
+
+RUN flush privileges;
+
+VOLUME ["/var/lib/mysql"]
+
+EXPOSE 3306
+
+CMD ["/usr/bin/mysqld_safe"]

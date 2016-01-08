@@ -1,0 +1,38 @@
+FROM centos
+MAINTAINER "www.svipc.com"
+ENV REFRESHED_AT 2015-11-11
+
+RUN yum -y install wget vim  && \
+    wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && \
+    wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && \
+    yum -y install tar bridge-utils openssh-clients net-tools screen git vim ntsysv setuptool telnet lsof bzip2 unzip gcc htop && \
+    yum upgrade -y && \
+    yum clean all
+
+RUN rm -f /etc/localtime \
+    && cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+	
+RUN echo '' >> /etc/bashrc \
+    && echo 'export LANGUAGE="zh_CN.UTF-8"' >> /etc/bashrc \
+    && echo 'export LANG="zh_CN.UTF-8"' >> /etc/bashrc
+	
+RUN localedef -c -i zh_CN -f UTF-8 zh_CN.UTF-8
+
+ENV JAVA_HOME /usr/java/jdk1.8.0_60
+ENV JRE_HOME $JAVA_HOME/jre
+ENV CATALINA_HOME /home/tomcat-8.0.9
+
+RUN wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+        http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm && \
+        rpm -ivh jdk-8u60-linux-x64.rpm && \
+        rm -rf jdk-8u60-linux-x64.rpm
+
+RUN wget http://archive.apache.org/dist/tomcat/tomcat-8/v8.0.9/bin/apache-tomcat-8.0.9.tar.gz && \
+        tar -zxvf apache-tomcat-8.0.9.tar.gz && \
+        rm -rf apache-tomcat*.tar.gz && \
+		rm -rf /home/tomcat-8.0.9/webapps/* && \
+        mv apache-tomcat* ${CATALINA_HOME}
+
+EXPOSE 8080
+
+CMD ["/home/tomcat-8.0.9/bin/catalina.sh", "run"]

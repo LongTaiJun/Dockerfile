@@ -1,0 +1,46 @@
+FROM centos
+MAINTAINER "www.svipc.com"
+ENV REFRESHED_AT 2015-09-25
+
+RUN yum -y install wget && \
+	mv /etc/yum.repos.d/CentOS-Base.repo /etc/yum.repos.d/CentOS-Base.repo.backup && \
+	wget -O /etc/yum.repos.d/CentOS-Base.repo http://mirrors.aliyun.com/repo/Centos-7.repo && \
+	wget -O /etc/yum.repos.d/epel.repo http://mirrors.aliyun.com/repo/epel-7.repo && \
+	wget http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/mysql-community-libs-5.6.26-2.el7.x86_64.rpm && \
+	rpm -ivh mysql-community-release-el7-5.noarch.rpm && \
+	rpm -ivh http://mirrors.aliyun.com/epel/epel-release-latest-7.noarch.rpm && \
+	yum install -y mysql-server nginx unzip && \
+	yum upgrade -y && \
+	yum clean all
+
+ENV JAVA_HOME /usr/java/jdk1.8.0_60
+ENV JRE_HOME $JAVA_HOME/jre
+ENV CATALINA_HOME /home/tomcat-8.0.9
+
+RUN wget --no-check-certificate --no-cookies --header "Cookie: oraclelicense=accept-securebackup-cookie" \
+        http://download.oracle.com/otn-pub/java/jdk/8u60-b27/jdk-8u60-linux-x64.rpm && \
+        rpm -ivh jdk-8u60-linux-x64.rpm && \
+        rm -rf jdk-8u60-linux-x64.rpm
+
+RUN wget http://archive.apache.org/dist/tomcat/tomcat-8/v8.0.9/bin/apache-tomcat-8.0.9.tar.gz && \
+        tar -zxvf apache-tomcat-8.0.9.tar.gz && \
+        rm -rf apache-tomcat*.tar.gz && \
+        mv apache-tomcat* ${CATALINA_HOME}
+
+RUN wget http://repo.mysql.com/yum/mysql-5.6-community/el/7/x86_64/mysql-community-libs-5.6.26-2.el7.x86_64.rpm && \
+	rpm -ivh mysql-community-release-el7-5.noarch.rpm && \
+	yum install -y mysql-server nginx tomcat unzip  && \
+	wget https://raw.githubusercontent.com/thx/RAP/release/release/rap_release_v0.11.3_20150727.war && \
+	unzip -x rap_release_v0.11.3_20150727.war -d /home/tomcat-8.0.9/webapps/ROOT && \
+	
+		
+ADD create_tomcat_admin_user.sh /home/tomcat-8.0.9/bin/create_tomcat_admin_user.sh
+ADD run.sh /home/tomcat-8.0.9/bin/run.sh
+
+RUN chmod +x /home/tomcat-8.0.9/bin/*sh
+
+EXPOSE 8080
+
+CMD ["/home/tomcat-8.0.9/bin/run.sh"]
+
+	
